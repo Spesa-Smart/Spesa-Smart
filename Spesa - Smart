@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpesaSmart</title>
+<meta name="theme-color" content="#16a34a">
+<style>
+*{box-sizing:border-box;font-family:system-ui} body{margin:0;background:#f6f7fb;padding:14px}
+.card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 10px #0001}
+input,button,select{width:100%;padding:13px;border-radius:10px;border:1px solid #ddd;font-size:16px;margin:6px 0}
+button{background:#111;color:#fff;border:none;font-weight:700}
+.chip{display:inline-block;background:#eef2ff;padding:6px 10px;border-radius:20px;margin:3px}
+.chip b{color:red;margin-left:6px}
+.store{border:1px solid #eee;border-radius:12px;padding:10px;margin:8px 0}
+.store.best{border:2px solid #16a34a;background:#f0fdf4}
+</style>
+</head>
+<body>
+<h1>🛒 SpesaSmart</h1>
+<p>Somma Lombardo - Meno km, meno spesa</p>
+<div class="card">
+<h3>1. La tua lista (si salva)</h3>
+<input id="p" placeholder="Es. Latte 1L">
+<button onclick="add()">+ Aggiungi</button>
+<div id="lista"></div>
+</div>
+<div class="card">
+<h3>2. La tua auto</h3>
+<select id="auto">
+<option value="15">Benzina - 15 km/l</option>
+<option value="20">Ibrida - 20 km/l</option>
+<option value="12">Diesel - 12 km/l</option>
+</select>
+<input id="pb" type="number" value="1.78" step="0.01">
+<small>Prezzo benzina €/litro</small>
+</div>
+<div class="card">
+<button onclick="calc()">🔍 CALCOLA DOVE CONVIENE</button>
+<div id="res"></div>
+</div>
+<script>
+let lista = JSON.parse(localStorage.getItem('lista') || '["Latte 1L","Pasta 500g","Pollo 1kg"]');
+let NEGOZI = [
+ {nome:"Conad Somma", dist:1.2, prezzi:{"latte 1l":1.45,"pasta 500g":0.95,"pollo 1kg":5.90}},
+ {nome:"MD Somma", dist:1.8, prezzi:{"latte 1l":1.29,"pasta 500g":0.79,"pollo 1kg":5.20}},
+ {nome:"Lidl Gallarate", dist:6.5, prezzi:{"latte 1l":1.19,"pasta 500g":0.75,"pollo 1kg":4.99}},
+ {nome:"Esselunga Gallarate", dist:7.2, prezzi:{"latte 1l":1.39,"pasta 500g":0.89,"pollo 1kg":5.50}}
+];
+function save(){ localStorage.setItem('lista', JSON.stringify(lista)); }
+function render(){ document.getElementById('lista').innerHTML = lista.map((x,i)=>`<span class="chip">${x}<b onclick="lista.splice(${i},1);save();render()"> x</b></span>`).join('') || 'Lista vuota'; }
+function add(){ let v=document.getElementById('p').value.trim().toLowerCase(); if(!v) return; lista.push(v); document.getElementById('p').value=''; save(); render(); }
+function calc(){
+ let consumo=parseFloat(document.getElementById('auto').value);
+ let pb=parseFloat(document.getElementById('pb').value);
+ let ris = NEGOZI.map(n=>{
+   let spesa=0;
+   lista.forEach(p=>{ spesa += n.prezzi[p] || 2.5; });
+   let benz = n.dist*2/consumo*pb;
+   return {nome:n.nome, spesa, benz, tot:spesa+benz, dist:n.dist};
+ });
+ ris.sort((a,b)=>a.tot-b.tot);
+ let best=ris[0];
+ document.getElementById('res').innerHTML = `<br><div class="store best"><b>✅ ${best.nome}</b><br>Spesa: €${best.spesa.toFixed(2)} + Benzina: €${best.benz.toFixed(2)} (${(best.dist*2).toFixed(1)} km)<br><b>TOTALE: €${best.tot.toFixed(2)}</b><br><a href="https://www.google.com/maps/search/${encodeURIComponent(best.nome)}" target="_blank">🧭 Naviga con Google Maps →</a></div><h3>📊 Confronto</h3>${ris.map(r=>`<div>${r.nome}: €${r.tot.toFixed(2)}</div>`).join('')}`;
+}
+render();
+</script>
+</body>
+</html>
