@@ -3,65 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpesaSmart</title>
-<meta name="theme-color" content="#16a34a">
+<title>Spesa Smart Milano</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-*{box-sizing:border-box;font-family:system-ui} body{margin:0;background:#f6f7fb;padding:14px}
-.card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 10px #0001}
-input,button,select{width:100%;padding:13px;border-radius:10px;border:1px solid #ddd;font-size:16px;margin:6px 0}
-button{background:#111;color:#fff;border:none;font-weight:700}
+*{box-sizing:border-box;font-family:system-ui} body{margin:0;background:#f6f7fb;padding:12px}
+h1{font-size:22px;margin:4px 0} .card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 10px #0001}
+input,select,button,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;font-size:16px;margin:6px 0}
+button{background:#111;color:#fff;border:none;font-weight:700} button.sec{background:#eef2ff;color:#111}
+.row{display:flex;gap:8px} .row>*{flex:1}
 .chip{display:inline-block;background:#eef2ff;padding:6px 10px;border-radius:20px;margin:3px}
-.chip b{color:red;margin-left:6px}
+.chip b{color:red;cursor:pointer;margin-left:6px}
+#map{height:300px;border-radius:12px;margin-top:10px}
 .store{border:1px solid #eee;border-radius:12px;padding:10px;margin:8px 0}
 .store.best{border:2px solid #16a34a;background:#f0fdf4}
+.badge{background:#16a34a;color:#fff;padding:3px 8px;border-radius:20px;font-size:12px}
+small{color:#666}
 </style>
 </head>
 <body>
-<h1>🛒 SpesaSmart</h1>
-<p>Somma Lombardo - Meno km, meno spesa</p>
+<h1>🛒 Spesa Smart Milano</h1>
+<p><small>Milano - Mappa + Prezzi + Benzina</small></p>
+
 <div class="card">
-<h3>1. La tua lista (si salva)</h3>
-<input id="p" placeholder="Es. Latte 1L">
-<button onclick="add()">+ Aggiungi</button>
-<div id="lista"></div>
+  <h3>1. Dove sei a Milano?</h3>
+  <select id="zona">
+    <option value="45.4642,9.19">Duomo / Centro</option>
+    <option value="45.458,9.181">Navigli / Porta Genova</option>
+    <option value="45.486,9.187">Isola / Porta Garibaldi</option>
+    <option value="45.452,9.214">Porta Romana / Lodi</option>
+    <option value="45.515,9.21">Bicocca / Niguarda</option>
+    <option value="45.476,9.226">Città Studi / Lambrate</option>
+    <option value="45.465,9.151">San Siro / Lotto</option>
+    <option value="45.44,9.17">Barona / Famagosta</option>
+  </select>
+  <button class="sec" onclick="gps()">📍 Usa il mio GPS invece</button>
 </div>
+
 <div class="card">
-<h3>2. La tua auto</h3>
-<select id="auto">
-<option value="15">Benzina - 15 km/l</option>
-<option value="20">Ibrida - 20 km/l</option>
-<option value="12">Diesel - 12 km/l</option>
-</select>
-<input id="pb" type="number" value="1.78" step="0.01">
-<small>Prezzo benzina €/litro</small>
+  <h3>2. Lista (si salva da sola)</h3>
+  <div class="row"><input id="prodotto" placeholder="Es. Latte 1L"><button onclick="aggiungi()">+ Aggiungi</button></div>
+  <div id="lista"></div>
+  <div class="row"><button class="sec" onclick="preset('base')">Lista Base</button><button class="sec" onclick="preset('colazione')">Colazione</button><button class="sec" onclick="pulisci()">Svuota</button></div>
 </div>
+
 <div class="card">
-<button onclick="calc()">🔍 CALCOLA DOVE CONVIENE</button>
-<div id="res"></div>
+  <h3>3. Auto</h3>
+  <div class="row">
+    <select id="auto"><option value="15">Benzina 15 km/l</option><option value="20">Ibrida 20 km/l</option><option value="12">Diesel 12 km/l</option><option value="18">Metano 18 km/l</option></select>
+    <input id="prezzoBenz" type="number" step="0.01" value="1.78">
+  </div>
+  <small>Prezzo benzina a Milano, cambialo se vuoi</small>
 </div>
+
+<div class="card">
+  <button onclick="calcola()">🔍 CALCOLA + MOSTRA MAPPA MILANO</button>
+  <div id="map"></div>
+  <div id="risultato"></div>
+</div>
+
+<div class="card">
+  <h3>4. Aggiorna i prezzi reali Milano</h3>
+  <textarea id="prezziJson" rows="6" style="width:100%;padding:10px;border-radius:10px"></textarea>
+  <button class="sec" onclick="salvaPrezzi()">💾 Salva prezzi</button>
+</div>
+
 <script>
-let lista = JSON.parse(localStorage.getItem('lista') || '["Latte 1L","Pasta 500g","Pollo 1kg"]');
-let NEGOZI = [
- {nome:"Conad Somma", dist:1.2, prezzi:{"latte 1l":1.45,"pasta 500g":0.95,"pollo 1kg":5.90}},
- {nome:"MD Somma", dist:1.8, prezzi:{"latte 1l":1.29,"pasta 500g":0.79,"pollo 1kg":5.20}},
- {nome:"Lidl Gallarate", dist:6.5, prezzi:{"latte 1l":1.19,"pasta 500g":0.75,"pollo 1kg":4.99}},
- {nome:"Esselunga Gallarate", dist:7.2, prezzi:{"latte 1l":1.39,"pasta 500g":0.89,"pollo 1kg":5.50}}
+const NEGOZI = [
+  {nome:"Esselunga Via Ripamonti", lat:45.438, lng:9.203},
+  {nome:"Esselunga Viale Papiniano", lat:45.457, lng:9.171},
+  {nome:"Carrefour Portello", lat:45.482, lng:9.154},
+  {nome:"Coop Piazza Lodi", lat:45.450, lng:9.214},
+  {nome:"Conad CityLife", lat:45.475, lng:9.156},
+  {nome:"Lidl Via Padova", lat:45.490, lng:9.224},
+  {nome:"Eurospin Via Mecenate", lat:45.458, lng:9.250},
+  {nome:"MD Via Gallarate", lat:45.494, lng:9.137},
+  {nome:"Penny Via Lorenteggio", lat:45.449, lng:9.158},
+  {nome:"Iperal Bicocca", lat:45.516, lng:9.208}
 ];
-function save(){ localStorage.setItem('lista', JSON.stringify(lista)); }
-function render(){ document.getElementById('lista').innerHTML = lista.map((x,i)=>`<span class="chip">${x}<b onclick="lista.splice(${i},1);save();render()"> x</b></span>`).join('') || 'Lista vuota'; }
-function add(){ let v=document.getElementById('p').value.trim().toLowerCase(); if(!v) return; lista.push(v); document.getElementById('p').value=''; save(); render(); }
-function calc(){
- let consumo=parseFloat(document.getElementById('auto').value);
- let pb=parseFloat(document.getElementById('pb').value);
- let ris = NEGOZI.map(n=>{
-   let spesa=0;
-   lista.forEach(p=>{ spesa += n.prezzi[p] || 2.5; });
-   let benz = n.dist*2/consumo*pb;
-   return {nome:n.nome, spesa, benz, tot:spesa+benz, dist:n.dist};
- });
- ris.sort((a,b)=>a.tot-b.tot);
- let best=ris[0];
- document.getElementById('res').innerHTML = `<br><div class="store best"><b>✅ ${best.nome}</b><br>Spesa: €${best.spesa.toFixed(2)} + Benzina: €${best.benz.toFixed(2)} (${(best.dist*2).toFixed(1)} km)<br><b>TOTALE: €${best.tot.toFixed(2)}</b><br><a href="https://www.google.com/maps/search/${encodeURIComponent(best.nome)}" target="_blank">🧭 Naviga con Google Maps →</a></div><h3>📊 Confronto</h3>${ris.map(r=>`<div>${r.nome}: €${r.tot.toFixed(2)}</div>`).join('')}`;
+let DB = JSON.parse(localStorage.getItem('spesa_prezzi_milano')||'null') || {
+  "latte 1l": {"Esselunga Via Ripamonti":1.39,"Esselunga Viale Papiniano":1.39,"Carrefour Portello":1.55,"Coop Piazza Lodi":1.49,"Conad CityLife":1.45,"Lidl Via Padova":1.19,"Eurospin Via Mecenate":1.15,"MD Via Gallarate":1.29,"Penny Via Lorenteggio":1.25,"Iperal Bicocca":1.35},
+  "pane": {"Esselunga Via Ripamonti":1.10,"Esselunga Viale Papiniano":1.10,"Carrefour Portello":1.30,"Coop Piazza Lodi":1.20,"Conad CityLife":1.20,"Lidl Via Padova":0.89,"Eurospin Via Mecenate":0.85,"MD Via Gallarate":0.99,"Penny Via Lorenteggio":0.95,"Iperal Bicocca":1.05},
+  "pasta 500g": {"Esselunga Via Ripamonti":0.89,"Esselunga Viale Papiniano":0.89,"Carrefour Portello":1.05,"Coop Piazza Lodi":0.95,"Conad CityLife":0.95,"Lidl Via Padova":0.75,"Eurospin Via Mecenate":0.69,"MD Via Gallarate":0.79,"Penny Via Lorenteggio":0.79,"Iperal Bicocca":0.85},
+  "pollo 1kg": {"Esselunga Via Ripamonti":5.50,"Esselunga Viale Papiniano":5.50,"Carrefour Portello":6.20,"Coop Piazza Lodi":5.90,"Conad CityLife":5.90,"Lidl Via Padova":4.99,"Eurospin Via Mecenate":4.79,"MD Via Gallarate":5.20,"Penny Via Lorenteggio":5.10,"Iperal Bicocca":5.40},
+  "pomodori 1kg": {"Esselunga Via Ripamonti":2.10,"Esselunga Viale Papiniano":2.10,"Carrefour Portello":2.60,"Coop Piazza Lodi":2.40,"Conad CityLife":2.40,"Lidl Via Padova":1.89,"Eurospin Via Mecenate":1.79,"MD Via Gallarate":1.99,"Penny Via Lorenteggio":1.95,"Iperal Bicocca":2.00},
+  "uova 10": {"Esselunga Via Ripamonti":2.70,"Esselunga Viale Papiniano":2.70,"Carrefour Portello":3.10,"Coop Piazza Lodi":2.90,"Conad CityLife":2.90,"Lidl Via Padova":2.29,"Eurospin Via Mecenate":2.19,"MD Via Gallarate":2.50,"Penny Via Lorenteggio":2.45,"Iperal Bicocca":2.60},
+  "caffè 250g": {"Esselunga Via Ripamonti":4.20,"Esselunga Viale Papiniano":4.20,"Carrefour Portello":4.80,"Coop Piazza Lodi":4.50,"Conad CityLife":4.50,"Lidl Via Padova":3.69,"Eurospin Via Mecenate":3.49,"MD Via Gallarate":3.99,"Penny Via Lorenteggio":3.89,"Iperal Bicocca":4.10}
+};
+document.getElementById('prezziJson').value = JSON.stringify(DB,null,2);
+let lista = JSON.parse(localStorage.getItem('spesa_lista_milano')||'["latte 1l","pasta 500g","pollo 1kg"]');
+let miaPos = {lat:45.4642,lng:9.19};
+let map, markers=[];
+function save(){ localStorage.setItem('spesa_lista_milano', JSON.stringify(lista)); }
+function render(){ document.getElementById('lista').innerHTML = lista.map((p,i)=>`<span class="chip">${p}<b onclick="lista.splice(${i},1);save();render()">x</b></span>`).join('')||'<small>Lista vuota</small>'; }
+function aggiungi(){ let v=document.getElementById('prodotto').value.trim().toLowerCase(); if(!v) return; lista.push(v); document.getElementById('prodotto').value=''; save(); render(); }
+function pulisci(){ lista=[]; save(); render(); }
+function preset(t){ lista = t==='base'?["latte 1l","pasta 500g","pollo 1kg","pomodori 1kg"]:["latte 1l","caffè 250g","uova 10","pane"]; save(); render(); }
+function salvaPrezzi(){ try{ DB=JSON.parse(document.getElementById('prezziJson').value); localStorage.setItem('spesa_prezzi_milano', JSON.stringify(DB)); alert('Prezzi salvati!'); }catch(e){ alert('JSON non valido'); } }
+function gps(){ if(!navigator.geolocation) return alert('GPS non disponibile'); navigator.geolocation.getCurrentPosition(p=>{ miaPos={lat:p.coords.latitude,lng:p.coords.longitude}; alert('Posizione presa! Ora premi CALCOLA'); },()=>alert('Consenti GPS su Chrome')); }
+function calcola(){
+  let z=document.getElementById('zona').value.split(','); 
+  // Se non hai usato GPS, usa la zona scelta. Se hai usato GPS, miaPos resta quella del GPS - per forzare la zona, commenta la riga sotto se vuoi solo GPS
+  // Per ora: se l'utente cambia zona, usala
+  miaPos={lat:parseFloat(z[0]),lng:parseFloat(z[1])};
+  if(lista.length===0) return alert('Aggiungi un prodotto');
+  let consumo=parseFloat(document.getElementById('auto').value);
+  let prezzoB=parseFloat(document.getElementById('prezzoBenz').value);
+  function distKm(a,b){ const R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180; const h=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+  let risultati = NEGOZI.map(n=>{
+    let d = distKm(miaPos,n); let tot=0; let det=[];
+    lista.forEach(p=>{ let pr = DB[p] && DB[p][n.nome] ? DB[p][n.nome] : 2.5; tot+=pr; det.push(`${p}: €${pr.toFixed(2)}`); });
+    return {...n, spesa:tot, dist:d, dettaglio:det};
+  });
+  risultati.sort((a,b)=>(a.spesa+a.dist*2/consumo*prezzoB)-(b.spesa+b.dist*2/consumo*prezzoB));
+  let best = risultati[0];
+  let benz = best.dist*2/consumo*prezzoB;
+  if(!map){ map=L.map('map').setView([miaPos.lat,miaPos.lng],13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map); }
+  map.setView([miaPos.lat,miaPos.lng],12);
+  markers.forEach(m=>map.removeLayer(m)); markers=[];
+  let casa = L.marker([miaPos.lat,miaPos.lng]).addTo(map).bindPopup('🏠 TU SEI QUI'); markers.push(casa);
+  risultati.forEach((r,i)=>{ let m=L.marker([r.lat,r.lng]).addTo(map).bindPopup(`<b>${r.nome}</b><br>Spesa €${r.spesa.toFixed(2)}<br>Dist ${r.dist.toFixed(1)} km`); markers.push(m); });
+  document.getElementById('risultato').innerHTML = `
+  <h3>✅ Migliore a Milano: ${best.nome}</h3>
+  <div class="store best"><b>${best.nome}</b> <span class="badge">CONSIGLIATO</span><br>
+  Spesa: <b>€${best.spesa.toFixed(2)}</b> | Benzina A/R: €${benz.toFixed(2)} (${(best.dist*2).toFixed(1)} km)<br>
+  <b>TOTALE: €${(best.spesa+benz).toFixed(2)}</b><br><small>${best.dettaglio.join(' • ')}</small><br>
+  <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(best.nome + ' Milano')}" target="_blank">🧭 Naviga con Google Maps →</a></div>
+  <h3>📊 Tutti a Milano</h3>${risultati.map(r=>`<div>${r.nome} - Spesa €${r.spesa.toFixed(2)} + Benzina €${(r.dist*2/consumo*prezzoB).toFixed(2)} = <b>€${(r.spesa+r.dist*2/consumo*prezzoB).toFixed(2)}</b> (${r.dist.toFixed(1)} km)</div>`).join('')}`;
 }
 render();
 </script>
