@@ -17,13 +17,18 @@ button{background:#111;color:#fff;border:none;font-weight:700} button.sec{backgr
 #map{height:300px;border-radius:12px;margin-top:10px}
 .store{border:1px solid #eee;border-radius:12px;padding:10px;margin:8px 0}
 .store.best{border:2px solid #16a34a;background:#f0fdf4}
+.store.multi{border:2px solid #2563eb;background:#eff6ff}
 .badge{background:#16a34a;color:#fff;padding:3px 8px;border-radius:20px;font-size:12px}
+.badge.blue{background:#2563eb}
 small{color:#666}
+.verdict{font-size:18px;font-weight:800;padding:12px;border-radius:12px;margin:10px 0;text-align:center}
+.verdict.single{background:#f0fdf4;color:#166534}
+.verdict.multi{background:#eff6ff;color:#1e40af}
 </style>
 </head>
 <body>
 <h1>🛒 Spesa Smart Milano</h1>
-<p><small>Milano - Mappa + Prezzi + Benzina</small></p>
+<p><small>Milano - 1 tappa VS più tappe + Benzina</small></p>
 
 <div class="card">
   <h3>1. Dove sei a Milano?</h3>
@@ -41,7 +46,7 @@ small{color:#666}
 </div>
 
 <div class="card">
-  <h3>2. Lista (si salva da sola)</h3>
+  <h3>2. Lista</h3>
   <div class="row"><input id="prodotto" placeholder="Es. Latte 1L"><button onclick="aggiungi()">+ Aggiungi</button></div>
   <div id="lista"></div>
   <div class="row"><button class="sec" onclick="preset('base')">Lista Base</button><button class="sec" onclick="preset('colazione')">Colazione</button><button class="sec" onclick="pulisci()">Svuota</button></div>
@@ -50,20 +55,20 @@ small{color:#666}
 <div class="card">
   <h3>3. Auto</h3>
   <div class="row">
-    <select id="auto"><option value="15">Benzina 15 km/l</option><option value="20">Ibrida 20 km/l</option><option value="12">Diesel 12 km/l</option><option value="18">Metano 18 km/l</option></select>
+    <select id="auto"><option value="15">Benzina 15 km/l</option><option value="20">Ibrida 20 km/l</option><option value="12">Diesel 12 km/l</option><option value="18">Metano 18 km/l</option><option value="999">A piedi / Metro (0 benzina)</option></select>
     <input id="prezzoBenz" type="number" step="0.01" value="1.78">
   </div>
-  <small>Prezzo benzina a Milano, cambialo se vuoi</small>
+  <small>Se vai a piedi/metro scegli l'ultima, così calcola solo la spesa senza benzina</small>
 </div>
 
 <div class="card">
-  <button onclick="calcola()">🔍 CALCOLA + MOSTRA MAPPA MILANO</button>
+  <button onclick="calcola()">🔍 CALCOLA: 1 TAPPA VS PIÙ TAPPE</button>
   <div id="map"></div>
   <div id="risultato"></div>
 </div>
 
 <div class="card">
-  <h3>4. Aggiorna i prezzi reali Milano</h3>
+  <h3>4. Prezzi Milano</h3>
   <textarea id="prezziJson" rows="6" style="width:100%;padding:10px;border-radius:10px"></textarea>
   <button class="sec" onclick="salvaPrezzi()">💾 Salva prezzi</button>
 </div>
@@ -100,36 +105,89 @@ function aggiungi(){ let v=document.getElementById('prodotto').value.trim().toLo
 function pulisci(){ lista=[]; save(); render(); }
 function preset(t){ lista = t==='base'?["latte 1l","pasta 500g","pollo 1kg","pomodori 1kg"]:["latte 1l","caffè 250g","uova 10","pane"]; save(); render(); }
 function salvaPrezzi(){ try{ DB=JSON.parse(document.getElementById('prezziJson').value); localStorage.setItem('spesa_prezzi_milano', JSON.stringify(DB)); alert('Prezzi salvati!'); }catch(e){ alert('JSON non valido'); } }
-function gps(){ if(!navigator.geolocation) return alert('GPS non disponibile'); navigator.geolocation.getCurrentPosition(p=>{ miaPos={lat:p.coords.latitude,lng:p.coords.longitude}; alert('Posizione presa! Ora premi CALCOLA'); },()=>alert('Consenti GPS su Chrome')); }
+function gps(){ if(!navigator.geolocation) return alert('GPS non disponibile'); navigator.geolocation.getCurrentPosition(p=>{ miaPos={lat:p.coords.latitude,lng:p.coords.longitude}; alert('Posizione presa! Ora premi CALCOLA'); },()=>alert('Consenti GPS')); }
+function distKm(a,b){ const R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180; const h=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+
 function calcola(){
   let z=document.getElementById('zona').value.split(','); 
-  // Se non hai usato GPS, usa la zona scelta. Se hai usato GPS, miaPos resta quella del GPS - per forzare la zona, commenta la riga sotto se vuoi solo GPS
-  // Per ora: se l'utente cambia zona, usala
+  // usa la zona scelta
   miaPos={lat:parseFloat(z[0]),lng:parseFloat(z[1])};
   if(lista.length===0) return alert('Aggiungi un prodotto');
   let consumo=parseFloat(document.getElementById('auto').value);
   let prezzoB=parseFloat(document.getElementById('prezzoBenz').value);
-  function distKm(a,b){ const R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180; const h=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
-  let risultati = NEGOZI.map(n=>{
-    let d = distKm(miaPos,n); let tot=0; let det=[];
-    lista.forEach(p=>{ let pr = DB[p] && DB[p][n.nome] ? DB[p][n.nome] : 2.5; tot+=pr; det.push(`${p}: €${pr.toFixed(2)}`); });
-    return {...n, spesa:tot, dist:d, dettaglio:det};
+  let costoKm = consumo>=900 ? 0 : (1/consumo*prezzoB); // euro per km
+
+  // --- 1. MIGLIORE SINGOLO ---
+  let singoli = NEGOZI.map(n=>{
+    let tot=0; lista.forEach(p=>{ tot += (DB[p] && DB[p][n.nome] ? DB[p][n.nome] : 2.5); });
+    let d = distKm(miaPos,n);
+    let benz = d*2*costoKm;
+    return {...n, spesa:tot, dist:d, totale:tot+benz, benz};
   });
-  risultati.sort((a,b)=>(a.spesa+a.dist*2/consumo*prezzoB)-(b.spesa+b.dist*2/consumo*prezzoB));
-  let best = risultati[0];
-  let benz = best.dist*2/consumo*prezzoB;
+  singoli.sort((a,b)=>a.totale-b.totale);
+  let bestSingle = singoli[0];
+
+  // --- 2. MIGLIORE MULTI-TAPPA: ogni prodotto dove costa meno ---
+  let piano = {}; // negozio -> [prodotti]
+  let spesaMulti = 0; let dettaglioMulti = [];
+  lista.forEach(p=>{
+    let bestN=null, bestP=999;
+    NEGOZI.forEach(n=>{ let pr = DB[p] && DB[p][n.nome] ? DB[p][n.nome] : 999; if(pr<bestP){bestP=pr; bestN=n.nome;} });
+    if(!piano[bestN]) piano[bestN]=[];
+    piano[bestN].push(`${p} €${bestP.toFixed(2)}`);
+    spesaMulti+=bestP;
+    dettaglioMulti.push(`${p} → ${bestN} €${bestP.toFixed(2)}`);
+  });
+  let negoziMulti = Object.keys(piano).map(nome=> NEGOZI.find(n=>n.nome===nome));
+  // Se sono più di 3 negozi, teniamo solo i 2 che fanno risparmiare di più? Per semplicità teniamo max 3 più vicini tra loro
+  // Ordine percorso: greedy dal più vicino a casa
+  let ordine=[]; let pos={...miaPos}; let rest=[...negoziMulti];
+  while(rest.length){ rest.sort((a,b)=>distKm(pos,a)-distKm(pos,b)); let nxt=rest.shift(); ordine.push(nxt); pos=nxt; }
+  let kmMulti=0; let cur={...miaPos};
+  ordine.forEach(n=>{ kmMulti+=distKm(cur,n); cur=n; });
+  kmMulti+=distKm(cur,miaPos); // ritorno a casa
+  let benzMulti = kmMulti*costoKm;
+  let totaleMulti = spesaMulti + benzMulti;
+
+  // --- 3. VERDETTO ---
+  let convieneMulti = totaleMulti < bestSingle.totale;
+  let risparmio = Math.abs(bestSingle.totale - totaleMulti);
+
+  // --- MAPPA ---
   if(!map){ map=L.map('map').setView([miaPos.lat,miaPos.lng],13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map); }
   map.setView([miaPos.lat,miaPos.lng],12);
   markers.forEach(m=>map.removeLayer(m)); markers=[];
   let casa = L.marker([miaPos.lat,miaPos.lng]).addTo(map).bindPopup('🏠 TU SEI QUI'); markers.push(casa);
-  risultati.forEach((r,i)=>{ let m=L.marker([r.lat,r.lng]).addTo(map).bindPopup(`<b>${r.nome}</b><br>Spesa €${r.spesa.toFixed(2)}<br>Dist ${r.dist.toFixed(1)} km`); markers.push(m); });
-  document.getElementById('risultato').innerHTML = `
-  <h3>✅ Migliore a Milano: ${best.nome}</h3>
-  <div class="store best"><b>${best.nome}</b> <span class="badge">CONSIGLIATO</span><br>
-  Spesa: <b>€${best.spesa.toFixed(2)}</b> | Benzina A/R: €${benz.toFixed(2)} (${(best.dist*2).toFixed(1)} km)<br>
-  <b>TOTALE: €${(best.spesa+benz).toFixed(2)}</b><br><small>${best.dettaglio.join(' • ')}</small><br>
-  <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(best.nome + ' Milano')}" target="_blank">🧭 Naviga con Google Maps →</a></div>
-  <h3>📊 Tutti a Milano</h3>${risultati.map(r=>`<div>${r.nome} - Spesa €${r.spesa.toFixed(2)} + Benzina €${(r.dist*2/consumo*prezzoB).toFixed(2)} = <b>€${(r.spesa+r.dist*2/consumo*prezzoB).toFixed(2)}</b> (${r.dist.toFixed(1)} km)</div>`).join('')}`;
+  // Se conviene multi, disegna percorso multi in blu, altrimenti percorso singolo in verde
+  if(convieneMulti){
+    let percorso=[[miaPos.lat,miaPos.lng],...ordine.map(o=>[o.lat,o.lng]),[miaPos.lat,miaPos.lng]];
+    let linea=L.polyline(percorso,{color:'blue',weight:4}).addTo(map); markers.push(linea);
+    ordine.forEach((r,i)=>{ let m=L.marker([r.lat,r.lng]).addTo(map).bindPopup(`<b>${i+1}° TAPPA: ${r.nome}</b><br>${piano[r.nome].join('<br>')}`); markers.push(m); });
+  } else {
+    let m=L.marker([bestSingle.lat,bestSingle.lng]).addTo(map).bindPopup(`<b>${bestSingle.nome}</b><br>Totale €${bestSingle.totale.toFixed(2)}`); markers.push(m);
+    let linea=L.polyline([[miaPos.lat,miaPos.lng],[bestSingle.lat,bestSingle.lng],[miaPos.lat,miaPos.lng]],{color:'green',weight:4}).addTo(map); markers.push(linea);
+  }
+
+  let html = '';
+  if(convieneMulti){
+    html += `<div class="verdict multi">🏆 CONVIENE FARE ${ordine.length} TAPPE<br>Risparmi €${risparmio.toFixed(2)} anche con la benzina!</div>`;
+  } else {
+    html += `<div class="verdict single">🏆 CONVIENE ANDARE IN 1 SOLO SUPERMERCATO<br>Risparmi €${risparmio.toFixed(2)} rispetto a fare più tappe</div>`;
+  }
+  html += `
+  <div class="store best"><b>🛒 OPZIONE 1 TAPPA: ${bestSingle.nome}</b><br>
+  Spesa: €${bestSingle.spesa.toFixed(2)} + Benzina: €${bestSingle.benz.toFixed(2)} (${(bestSingle.dist*2).toFixed(1)} km A/R)<br>
+  <b>TOTALE: €${bestSingle.totale.toFixed(2)}</b><br>
+  <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(bestSingle.nome+' Milano')}" target="_blank">🧭 Naviga →</a></div>
+
+  <div class="store multi"><b>🔀 OPZIONE PIÙ TAPPE: ${ordine.map(o=>o.nome).join(' → ')}</b><br>
+  Spesa (ogni prodotto dove costa meno): €${spesaMulti.toFixed(2)} + Benzina: €${benzMulti.toFixed(2)} (${kmMulti.toFixed(1)} km totali)<br>
+  <b>TOTALE: €${totaleMulti.toFixed(2)}</b><br>
+  <small>${dettaglioMulti.join('<br>')}</small><br>
+  <a href="https://www.google.com/maps/dir/?api=1&origin=${miaPos.lat},${miaPos.lng}&destination=${encodeURIComponent(ordine[ordine.length-1].nome+' Milano')}&waypoints=${ordine.slice(0,-1).map(o=>encodeURIComponent(o.nome+' Milano')).join('|')}" target="_blank">🧭 Naviga giro completo →</a></div>
+
+  <h3>📊 Tutti in 1 tappa</h3>${singoli.map(r=>`<div>${r.nome} - Spesa €${r.spesa.toFixed(2)} + Benzina €${r.benz.toFixed(2)} = <b>€${r.totale.toFixed(2)}</b></div>`).join('')}`;
+  document.getElementById('risultato').innerHTML = html;
 }
 render();
 </script>
