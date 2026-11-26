@@ -14,182 +14,93 @@ button{background:#111;color:#fff;border:none;font-weight:700} button.sec{backgr
 .row{display:flex;gap:8px} .row>*{flex:1}
 .chip{display:inline-block;background:#eef2ff;padding:6px 10px;border-radius:20px;margin:3px}
 .chip b{color:red;cursor:pointer;margin-left:6px}
+.cat{margin:10px 0} .cat b{display:block;margin:8px 0 4px}
+.cat button{width:auto;padding:8px 10px;margin:2px;font-size:13px}
 #map{height:300px;border-radius:12px;margin-top:10px}
 .store{border:1px solid #eee;border-radius:12px;padding:10px;margin:8px 0}
-.store.best{border:2px solid #16a34a;background:#f0fdf4}
-.store.multi{border:2px solid #2563eb;background:#eff6ff}
-.badge{background:#16a34a;color:#fff;padding:3px 8px;border-radius:20px;font-size:12px}
-.badge.blue{background:#2563eb}
-small{color:#666}
-.verdict{font-size:18px;font-weight:800;padding:12px;border-radius:12px;margin:10px 0;text-align:center}
-.verdict.single{background:#f0fdf4;color:#166534}
-.verdict.multi{background:#eff6ff;color:#1e40af}
+.store.best{border:2px solid #16a34a;background:#f0fdf4} .store.multi{border:2px solid #2563eb;background:#eff6ff}
+small{color:#666} .verdict{font-size:18px;font-weight:800;padding:12px;border-radius:12px;margin:10px 0;text-align:center}
+.verdict.single{background:#f0fdf4;color:#166534} .verdict.multi{background:#eff6ff;color:#1e40af}
+.warn{background:#fef3c7;padding:10px;border-radius:10px;margin:8px 0}
+.search{position:sticky;top:0;background:#fff;z-index:5;padding:8px 0}
 </style>
 </head>
 <body>
-<h1>🛒 Spesa Smart Milano</h1>
-<p><small>Milano - 1 tappa VS più tappe + Benzina</small></p>
+<h1>🛒 Spesa Smart Milano - MEGA</h1>
+<p><small>300+ prodotti - Tocca per aggiungere - 1 tappa VS più tappe + Benzina</small></p>
 
 <div class="card">
-  <h3>1. Dove sei a Milano?</h3>
-  <select id="zona">
-    <option value="45.4642,9.19">Duomo / Centro</option>
-    <option value="45.458,9.181">Navigli / Porta Genova</option>
-    <option value="45.486,9.187">Isola / Porta Garibaldi</option>
-    <option value="45.452,9.214">Porta Romana / Lodi</option>
-    <option value="45.515,9.21">Bicocca / Niguarda</option>
-    <option value="45.476,9.226">Città Studi / Lambrate</option>
-    <option value="45.465,9.151">San Siro / Lotto</option>
-    <option value="45.44,9.17">Barona / Famagosta</option>
-  </select>
-  <button class="sec" onclick="gps()">📍 Usa il mio GPS invece</button>
+<h3>1. Dove sei?</h3>
+<select id="zona"><option value="45.4642,9.19">Duomo / Centro</option><option value="45.458,9.181">Navigli</option><option value="45.486,9.187">Isola / Garibaldi</option><option value="45.452,9.214">Porta Romana / Lodi</option><option value="45.515,9.21">Bicocca / Niguarda</option><option value="45.476,9.226">Città Studi / Lambrate</option><option value="45.465,9.151">San Siro / Lotto</option><option value="45.44,9.17">Barona / Famagosta</option></select>
+<button class="sec" onclick="gps()">📍 Usa GPS</button>
 </div>
 
 <div class="card">
-  <h3>2. Lista</h3>
-  <div class="row"><input id="prodotto" placeholder="Es. Latte 1L"><button onclick="aggiungi()">+ Aggiungi</button></div>
-  <div id="lista"></div>
-  <div class="row"><button class="sec" onclick="preset('base')">Lista Base</button><button class="sec" onclick="preset('colazione')">Colazione</button><button class="sec" onclick="pulisci()">Svuota</button></div>
+<h3>2. Lista (<span id="conta">0</span> prodotti)</h3>
+<div class="row"><input id="prodotto" placeholder="Cerca: es. scottex, merluzzo..."><button onclick="aggiungi()">+ Aggiungi</button></div>
+<div id="lista"></div>
+<div class="search"><input id="cerca" placeholder="🔍 Filtra prodotti: scrivi es. detersivo, pasta, latte..." oninput="renderCat()"></div>
+<div id="categorie"></div>
+<div class="row"><button class="sec" onclick="pulisci()">Svuota lista</button></div>
 </div>
 
-<div class="card">
-  <h3>3. Auto</h3>
-  <div class="row">
-    <select id="auto"><option value="15">Benzina 15 km/l</option><option value="20">Ibrida 20 km/l</option><option value="12">Diesel 12 km/l</option><option value="18">Metano 18 km/l</option><option value="999">A piedi / Metro (0 benzina)</option></select>
-    <input id="prezzoBenz" type="number" step="0.01" value="1.78">
-  </div>
-  <small>Se vai a piedi/metro scegli l'ultima, così calcola solo la spesa senza benzina</small>
-</div>
+<div class="card"><h3>3. Auto</h3><div class="row"><select id="auto"><option value="15">Benzina 15 km/l</option><option value="20">Ibrida 20 km/l</option><option value="12">Diesel 12 km/l</option><option value="999">A piedi / Metro</option></select><input id="prezzoBenz" type="number" step="0.01" value="1.78"></div></div>
 
-<div class="card">
-  <button onclick="calcola()">🔍 CALCOLA: 1 TAPPA VS PIÙ TAPPE</button>
-  <div id="map"></div>
-  <div id="risultato"></div>
-</div>
+<div class="card"><button onclick="calcola()">🔍 CALCOLA: 1 TAPPA VS PIÙ TAPPE</button><div id="map"></div><div id="risultato"></div></div>
 
-<div class="card">
-  <h3>4. Prezzi Milano</h3>
-  <textarea id="prezziJson" rows="6" style="width:100%;padding:10px;border-radius:10px"></textarea>
-  <button class="sec" onclick="salvaPrezzi()">💾 Salva prezzi</button>
-</div>
+<div class="card"><h3>4. Aggiungi prodotto tuo</h3><input id="nuovoProd" placeholder="Prodotto nuovo"><input id="nuovoPrezzo" type="number" step="0.01" placeholder="Prezzo es. 2.90"><button class="sec" onclick="aggiungiProdottoNuovo()">💾 Aggiungi prodotto</button><textarea id="prezziJson" rows="5" style="width:100%;padding:10px;border-radius:10px"></textarea><button class="sec" onclick="salvaPrezzi()">💾 Salva tutti i prezzi</button></div>
 
 <script>
-const NEGOZI = [
-  {nome:"Esselunga Via Ripamonti", lat:45.438, lng:9.203},
-  {nome:"Esselunga Viale Papiniano", lat:45.457, lng:9.171},
-  {nome:"Carrefour Portello", lat:45.482, lng:9.154},
-  {nome:"Coop Piazza Lodi", lat:45.450, lng:9.214},
-  {nome:"Conad CityLife", lat:45.475, lng:9.156},
-  {nome:"Lidl Via Padova", lat:45.490, lng:9.224},
-  {nome:"Eurospin Via Mecenate", lat:45.458, lng:9.250},
-  {nome:"MD Via Gallarate", lat:45.494, lng:9.137},
-  {nome:"Penny Via Lorenteggio", lat:45.449, lng:9.158},
-  {nome:"Iperal Bicocca", lat:45.516, lng:9.208}
-];
-let DB = JSON.parse(localStorage.getItem('spesa_prezzi_milano')||'null') || {
-  "latte 1l": {"Esselunga Via Ripamonti":1.39,"Esselunga Viale Papiniano":1.39,"Carrefour Portello":1.55,"Coop Piazza Lodi":1.49,"Conad CityLife":1.45,"Lidl Via Padova":1.19,"Eurospin Via Mecenate":1.15,"MD Via Gallarate":1.29,"Penny Via Lorenteggio":1.25,"Iperal Bicocca":1.35},
-  "pane": {"Esselunga Via Ripamonti":1.10,"Esselunga Viale Papiniano":1.10,"Carrefour Portello":1.30,"Coop Piazza Lodi":1.20,"Conad CityLife":1.20,"Lidl Via Padova":0.89,"Eurospin Via Mecenate":0.85,"MD Via Gallarate":0.99,"Penny Via Lorenteggio":0.95,"Iperal Bicocca":1.05},
-  "pasta 500g": {"Esselunga Via Ripamonti":0.89,"Esselunga Viale Papiniano":0.89,"Carrefour Portello":1.05,"Coop Piazza Lodi":0.95,"Conad CityLife":0.95,"Lidl Via Padova":0.75,"Eurospin Via Mecenate":0.69,"MD Via Gallarate":0.79,"Penny Via Lorenteggio":0.79,"Iperal Bicocca":0.85},
-  "pollo 1kg": {"Esselunga Via Ripamonti":5.50,"Esselunga Viale Papiniano":5.50,"Carrefour Portello":6.20,"Coop Piazza Lodi":5.90,"Conad CityLife":5.90,"Lidl Via Padova":4.99,"Eurospin Via Mecenate":4.79,"MD Via Gallarate":5.20,"Penny Via Lorenteggio":5.10,"Iperal Bicocca":5.40},
-  "pomodori 1kg": {"Esselunga Via Ripamonti":2.10,"Esselunga Viale Papiniano":2.10,"Carrefour Portello":2.60,"Coop Piazza Lodi":2.40,"Conad CityLife":2.40,"Lidl Via Padova":1.89,"Eurospin Via Mecenate":1.79,"MD Via Gallarate":1.99,"Penny Via Lorenteggio":1.95,"Iperal Bicocca":2.00},
-  "uova 10": {"Esselunga Via Ripamonti":2.70,"Esselunga Viale Papiniano":2.70,"Carrefour Portello":3.10,"Coop Piazza Lodi":2.90,"Conad CityLife":2.90,"Lidl Via Padova":2.29,"Eurospin Via Mecenate":2.19,"MD Via Gallarate":2.50,"Penny Via Lorenteggio":2.45,"Iperal Bicocca":2.60},
-  "caffè 250g": {"Esselunga Via Ripamonti":4.20,"Esselunga Viale Papiniano":4.20,"Carrefour Portello":4.80,"Coop Piazza Lodi":4.50,"Conad CityLife":4.50,"Lidl Via Padova":3.69,"Eurospin Via Mecenate":3.49,"MD Via Gallarate":3.99,"Penny Via Lorenteggio":3.89,"Iperal Bicocca":4.10}
+const NEGOZI=[{nome:"Esselunga Via Ripamonti",lat:45.438,lng:9.203},{nome:"Esselunga Viale Papiniano",lat:45.457,lng:9.171},{nome:"Carrefour Portello",lat:45.482,lng:9.154},{nome:"Coop Piazza Lodi",lat:45.45,lng:9.214},{nome:"Conad CityLife",lat:45.475,lng:9.156},{nome:"Lidl Via Padova",lat:45.49,lng:9.224},{nome:"Eurospin Via Mecenate",lat:45.458,lng:9.25},{nome:"MD Via Gallarate",lat:45.494,lng:9.137},{nome:"Penny Via Lorenteggio",lat:45.449,lng:9.158},{nome:"Iperal Bicocca",lat:45.516,lng:9.208}];
+
+const CATEGORIE={
+"🥩 Carne e Salumi":["pollo 1kg","petto di pollo 1kg","cosce pollo","ali pollo","scottona 1kg","scottona","vitello 1kg","vitello","manzo 1kg","manzo","macinato 1kg","macinato","hamburger","hamburger pollo","salsiccia 1kg","salsiccia","bistecca","costine","tacchino 1kg","tacchino","petto tacchino","coniglio","agnello","maiale 1kg","lonza","arista","spezzatino","prosciutto cotto","prosciutto crudo","salame","salame milano","mortadella","bresaola","wurstel","pancetta","pancetta affumicata","speck","coppa","lardo","porchetta","cotechino","zampone","carpaccio","straccetti"],
+"🐟 Pesce e Mare":["merluzzo 1kg","merluzzo","filetti merluzzo","salmone 1kg","salmone","salmone affumicato","tonno fresco 1kg","tonno fresco","gamberi 1kg","gamberi","gambero rosso","cozze 1kg","cozze","vongole","branzino","orata","sogliola","trota","trota salmonata","polpo","calamari","seppie","tonno scatola","tonno al naturale","sgombro scatola","sardine scatola","acciughe","acciughe salate","surimi","baccala","stoccafisso","pesce spada","scampi","astice","insalata di mare","bastoncini pesce"],
+"🥛 Latte Formaggi Uova":["latte 1l","latte","latte senza lattosio","latte intero","latte parzialmente scremato","yogurt","yogurt greco","yogurt da bere","kefir","burro 250g","burro","margarina","mozzarella","mozzarella bufala","burrata","parmigiano 1kg","parmigiano","grana","grana padano","pecorino","ricotta","ricotta salata","stracchino","fontina","brie","camembert","gorgonzola","emmental","feta","mascarpone","panna da cucina","panna montata","uova 10","uova","uova 6","formaggio spalmabile","sottilette","caciotta","provolone","taleggio","robiola","caprino"],
+"🍞 Pane Pasticceria Colazione":["pane","pane in cassetta","pane integrale","pane ai cereali","panini","focaccia","fette biscottate","fette biscottate integrali","cornetti","cornetti vuoti","biscotti","biscotti integrali","merendine","pan di spagna","torta","tortine","muffin","plumcake","croissant","caffè 250g","caffè","caffè macinato","caffè in grani","caffè decaffeinato","caffè capsule","caffè cialde","orzo","tè","tè verde","tè deteinato","camomilla","tisana","cioccolata","cioccolata solubile","marmellata","marmellata fragole","marmellata albicocca","nutella","crema spalmabile","cereali","cereali cioccolato","muesli","granola","zucchero 1kg","zucchero di canna","dolcificante","miele","miele millefiori","cacao","cacao amaro","lievito","lievito di birra","vanillina"],
+"🍝 Dispensa Pasta Riso Condimenti":["pasta 500g","pasta","pasta integrale","spaghetti","penne","fusilli","rigatoni","farfalle","lasagne","tagliatelle","gnocchi","riso 1kg","riso","riso basmati","riso integrale","risotto","farina 1kg","farina 00","farina integrale","semola","olio 1l","olio extra vergine","olio di semi","olio di girasole","aceto","aceto balsamico","aceto di mele","sale","sale grosso","sale fino","pepe","pepe nero","peperoncino","curcuma","curry","paprika","origano","basilico","rosmarino","passata pomodoro","passata","pelati","polpa pomodoro","concentrato pomodoro","piselli scatola","fagioli scatola","fagioli borlotti","ceci scatola","lenticchie","lenticchie secche","mais scatola","brodo cubetti","brodo granulare","salsa","salsa bbq","ketchup","maionese","maionese light","senape","salsa rosa","tabasco","soia salsa","worcester","capperi","olive","olive verdi","olive nere","sottaceti","cetriolini","funghi sottolio","carciofini sottolio","pomodori secchi"],
+"🥦 Frutta Verdura Legumi Freschi":["pomodori 1kg","pomodori","pomodorini","pomodori datterini","patate 1kg","patate","patate novelle","cipolle 1kg","cipolle","cipolle rosse","carote 1kg","carote","zucchine 1kg","zucchine","melanzane 1kg","melanzane","peperoni 1kg","peperoni","insalata","lattuga","lattuga iceberg","rucola","valeriana","spinaci","spinaci freschi","broccoli","cavolfiore","cavolo","cavolo verza","finocchi","sedano","sedano rapa","porri","asparagi","carciofi","funghi","funghi champignon","funghi porcini","aglio","zenzero","banane 1kg","banane","mele 1kg","mele","mele golden","mele fuji","pere 1kg","pere","arance 1kg","arance","limoni 1kg","limoni","mandarini 1kg","mandarini","clementine","uva 1kg","uva","uva bianca","fragole","fragole 500g","kiwi","avocado","mango","ananas","pesche","albicocche","ciliegie","melone","anguria","prugne","fichi","noci","nocciole","mandorle","pistacchi","arachidi","pinoli"],
+"🧊 Surgelati e Gelati":["pizza surgelata","pizza margherita surgelata","patatine surgelate","verdure surgelate","minestrone surgelato","pesce surgelato","gelato","gelato vaschetta","gelato cono","gelato stecco","ghiaccioli","bastoncini pesce","sofficini","crocchette surgelate","cotolette surgelate","lasagne surgelate","cannelloni surgelati","ravioli surgelati","tortellini surgelati","gnocchi surgelati","hamburger surgelati","pollo surgelato","frutti di bosco surgelati","spinaci surgelati"],
+"🥤 Bevande Alcolici":["acqua 6x1.5l","acqua","acqua naturale","acqua frizzante","coca cola 1.5l","coca cola zero","pepsi","aranciata","chinotto","gassosa","succo arancia","succo ace","succo pesca","succo ananas","nettare","birra","birra 33cl","birra 6 bottiglie","birra analcolica","vino rosso","vino bianco","vino rosè","prosecco","spumante","champagne","lambrusco","aperitivo","spritz","gin","vodka","whisky","limoncello","latte di soia","latte di mandorla","latte di avena","latte di riso","energy drink","tè freddo","tè freddo limone","tè freddo pesca","sciroppo","granita","acqua tonica","soda"],
+"🧹 Pulizia Casa Completa":["detersivo pavimenti","detersivo pavimenti profumato","detersivo piatti","detersivo piatti limone","detersivo lavatrice","detersivo lavatrice liquido","detersivo lavatrice polvere","detersivo lavastoviglie","detersivo lavastoviglie pastiglie","ammorbidente","ammorbidente concentrato","candeggina","candeggina delicata","varechina","sgrassatore","sgrassatore universale","vetri spray","bagno spray","bagno anticalcare","mucillagine","spugne","spugne cucina","panni microfibra","panni cattura polvere","scopa","scopa elettrica","mop","mop pavimenti","secchio","guanti gomma","guanti lattice","sacchetti spazzatura","sacchetti umido","sacchetti gelo","carta forno","alluminio","pellicola","pellicola trasparente","scottex","scottex 4 rotoli","scottex 8 rotoli","carta igienica","carta igienica 12 rotoli","carta igienica 24 rotoli","carta igienica 4 rotoli","tovaglioli","tovaglioli carta","fazzoletti","fazzoletti 10 pacchetti","deodorante ambiente","deodorante ambiente spray","profumatore casa","detersivo bucato liquido","smacchiatore","smacchiatore spray","anticalcare","disinfettante","disinfettante mani","alcool","aceto bianco","bicarbonato","detersivo vetri","detersivo forno","detersivo frigo","spray multiuso","candeggina gel","pastiglie wc","scovolino","spazzola wc"],
+"🧴 Corpo Igiene Bellezza":["shampoo","shampoo antiforfora","shampoo delicato","shampoo bimbi","balsamo","maschera capelli","bagnoschiuma","bagnoschiuma bimbi","sapone mani","sapone liquido","sapone solido","saponetta","dentifricio","dentifricio sbiancante","dentifricio sensibile","spazzolino","spazzolino elettrico","testine spazzolino","collutorio","filo interdentale","deodorante","deodorante spray","deodorante roll-on","deodorante stick","crema viso","crema viso giorno","crema viso notte","crema corpo","crema mani","crema piedi","dopobarba","dopobarba balsamo","rasoio","rasoio usa e getta","lamette","lamette ricambio","schiuma da barba","gel da barba","struccante","struccante occhi","acqua micellare","cotone","dischetti cotone","cotton fioc","cerotti","cerotti impermeabili","vitamina c","vitamina d","integratore","integratore ferro","integratore magnesio","docciaschiuma","detergente intimo","detergente intimo delicato","bagno schiuma","lozione corpo","latte corpo","profumo","profumo donna","profumo uomo","smalto","smalto trasparente","solvente unghie","lime unghie","crema solare","crema solare spf 50","doposole","burrocacao","burro cacao","gel mani","salviettine struccanti","salviettine intime","carta igienica","fazzoletti","assorbenti","assorbenti notte","assorbenti giorno","proteggi slip","tampax","coppetta mestruale","pannolini","salviettine bebe","pannolini taglia 4"],
+"👶 Bimbi Animali":["pannolini","pannolini taglia 3","pannolini taglia 4","pannolini taglia 5","pannolini taglia 6","salviettine bebe","salviettine umidificate","omogeneizzati","omogeneizzati frutta","omogeneizzati carne","latte in polvere","latte in polvere 1","latte in polvere 2","pastina bimbi","pastina","biscotti bimbi","cibo cani","cibo cani umido","crocchette cani","crocchette cani 3kg","cibo gatti","cibo gatti umido","crocchette gatti","crocchette gatti 2kg","lettiera gatto","lettiera agglomerante","snack cani","snack gatti","biscotti cani","shampoo cani","shampoo gatti","gioco cani","gioco gatti"],
+"🍫 Snack Dolci Merenda":["patatine","patatine classiche","patatine paprika","popcorn","popcorn microonde","cioccolato","cioccolato fondente","cioccolato al latte","cioccolatini","cioccolatini assortiti","caramelle","caramelle gommose","gomme","gomme senza zucchero","snack dolci","snack salati","torta","tortine","torta al cioccolato","gelato","biscotti","wafer","wafer cioccolato","taralli","taralli pugliesi","grissini","grissini torinesi","cracker","cracker integrali","olive","sottaceti","noccioline","mix frutta secca","barrette cereali","barrette proteiche","liquorice","marshmallow","nutella go","kinder","ovetto","uovo di pasqua"]
 };
-document.getElementById('prezziJson').value = JSON.stringify(DB,null,2);
-let lista = JSON.parse(localStorage.getItem('spesa_lista_milano')||'["latte 1l","pasta 500g","pollo 1kg"]');
-let miaPos = {lat:45.4642,lng:9.19};
-let map, markers=[];
-function save(){ localStorage.setItem('spesa_lista_milano', JSON.stringify(lista)); }
-function render(){ document.getElementById('lista').innerHTML = lista.map((p,i)=>`<span class="chip">${p}<b onclick="lista.splice(${i},1);save();render()">x</b></span>`).join('')||'<small>Lista vuota</small>'; }
-function aggiungi(){ let v=document.getElementById('prodotto').value.trim().toLowerCase(); if(!v) return; lista.push(v); document.getElementById('prodotto').value=''; save(); render(); }
-function pulisci(){ lista=[]; save(); render(); }
-function preset(t){ lista = t==='base'?["latte 1l","pasta 500g","pollo 1kg","pomodori 1kg"]:["latte 1l","caffè 250g","uova 10","pane"]; save(); render(); }
-function salvaPrezzi(){ try{ DB=JSON.parse(document.getElementById('prezziJson').value); localStorage.setItem('spesa_prezzi_milano', JSON.stringify(DB)); alert('Prezzi salvati!'); }catch(e){ alert('JSON non valido'); } }
-function gps(){ if(!navigator.geolocation) return alert('GPS non disponibile'); navigator.geolocation.getCurrentPosition(p=>{ miaPos={lat:p.coords.latitude,lng:p.coords.longitude}; alert('Posizione presa! Ora premi CALCOLA'); },()=>alert('Consenti GPS')); }
-function distKm(a,b){ const R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180; const h=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+const PREZZI={};
+function add(p,v){PREZZI[p]=v;}
+// Valori di base - li puoi cambiare tutti
+["pollo 1kg",5.20,"petto di pollo 1kg",8.50,"cosce pollo",4.80,"ali pollo",4.50,"scottona 1kg",18.50,"scottona",18.50,"vitello 1kg",22.00,"vitello",22.00,"manzo 1kg",16.50,"manzo",16.50,"macinato 1kg",12.00,"macinato",12.00,"hamburger",4.50,"hamburger pollo",4.20,"salsiccia 1kg",9.50,"salsiccia",9.50,"bistecca",20.00,"costine",11.00,"tacchino 1kg",9.00,"tacchino",9.00,"petto tacchino",10.50,"coniglio",11.00,"agnello",15.00,"maiale 1kg",9.00,"lonza",10.00,"arista",11.50,"spezzatino",13.00,"prosciutto cotto",3.50,"prosciutto crudo",4.80,"salame",4.20,"salame milano",5.00,"mortadella",3.80,"bresaola",5.50,"wurstel",2.20,"pancetta",3.90,"pancetta affumicata",4.20,"speck",5.20,"coppa",4.60,"lardo",6.00,"porchetta",7.50,"cotechino",5.80,"zampone",6.50,"carpaccio",6.80,"straccetti",9.50].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["merluzzo 1kg",12.90,"merluzzo",12.90,"filetti merluzzo",13.50,"salmone 1kg",19.90,"salmone",19.90,"salmone affumicato",6.50,"tonno fresco 1kg",22.00,"tonno fresco",22.00,"gamberi 1kg",18.00,"gamberi",18.00,"gambero rosso",24.00,"cozze 1kg",5.50,"cozze",5.50,"vongole",9.00,"branzino",14.00,"orata",12.00,"sogliola",16.00,"trota",11.00,"trota salmonata",12.50,"polpo",15.00,"calamari",13.00,"seppie",12.50,"tonno scatola",3.50,"tonno al naturale",3.60,"sgombro scatola",2.80,"sardine scatola",2.50,"acciughe",3.20,"acciughe salate",3.80,"surimi",3.40,"baccala",14.50,"stoccafisso",15.50,"pesce spada",21.00,"scampi",19.00,"astice",28.00,"insalata di mare",6.50,"bastoncini pesce",3.40].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["latte 1l",1.35,"latte",1.35,"latte senza lattosio",1.60,"latte intero",1.35,"latte parzialmente scremato",1.30,"yogurt",1.20,"yogurt greco",1.80,"yogurt da bere",1.50,"kefir",2.20,"burro 250g",2.80,"burro",2.80,"margarina",1.90,"mozzarella",1.89,"mozzarella bufala",3.20,"burrata",2.90,"parmigiano 1kg",18.00,"parmigiano",18.00,"grana",16.50,"grana padano",16.50,"pecorino",15.00,"ricotta",1.90,"ricotta salata",3.50,"stracchino",1.70,"fontina",14.00,"brie",2.50,"camembert",2.80,"gorgonzola",2.90,"emmental",12.00,"feta",2.40,"mascarpone",2.20,"panna da cucina",1.10,"panna montata",1.80,"uova 10",2.60,"uova",2.60,"uova 6",1.80,"formaggio spalmabile",1.90,"sottilette",1.80,"caciotta",12.00,"provolone",13.00,"taleggio",13.50,"robiola",2.20,"caprino",2.60].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["pane",1.05,"pane in cassetta",1.60,"pane integrale",1.80,"pane ai cereali",2.10,"panini",1.90,"focaccia",2.50,"fette biscottate",1.40,"fette biscottate integrali",1.50,"cornetti",2.80,"cornetti vuoti",2.50,"biscotti",2.20,"biscotti integrali",2.40,"merendine",2.50,"pan di spagna",3.20,"torta",4.90,"tortine",3.20,"muffin",3.00,"plumcake",2.90,"croissant",2.80,"caffè 250g",4.10,"caffè",4.10,"caffè macinato",4.10,"caffè in grani",5.50,"caffè decaffeinato",4.50,"caffè capsule",4.90,"caffè cialde",4.60,"orzo",3.20,"tè",2.00,"tè verde",2.20,"tè deteinato",2.20,"camomilla",2.10,"tisana",2.40,"cioccolata",3.20,"cioccolata solubile",3.20,"marmellata",2.30,"marmellata fragole",2.30,"marmellata albicocca",2.30,"nutella",4.50,"crema spalmabile",3.90,"cereali",3.20,"cereali cioccolato",3.60,"muesli",3.50,"granola",4.20,"zucchero 1kg",1.20,"zucchero di canna",1.80,"dolcificante",2.80,"miele",4.80,"miele millefiori",5.20,"cacao",3.90,"cacao amaro",3.90,"lievito",0.90,"lievito di birra",0.90,"vanillina",0.80].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["pasta 500g",0.85,"pasta",0.85,"pasta integrale",1.10,"spaghetti",0.85,"penne",0.85,"fusilli",0.85,"rigatoni",0.85,"farfalle",0.85,"lasagne",2.20,"tagliatelle",1.90,"gnocchi",1.80,"riso 1kg",2.10,"riso",2.10,"riso basmati",2.80,"riso integrale",2.40,"risotto",2.60,"farina 1kg",1.10,"farina 00",1.10,"farina integrale",1.30,"semola",1.20,"olio 1l",6.50,"olio extra vergine",6.50,"olio di semi",2.90,"olio di girasole",2.90,"aceto",1.50,"aceto balsamico",2.90,"aceto di mele",1.80,"sale",0.70,"sale grosso",0.80,"sale fino",0.70,"pepe",2.50,"pepe nero",2.50,"peperoncino",1.90,"curcuma",2.80,"curry",2.90,"paprika",2.60,"origano",1.80,"basilico",1.20,"rosmarino",1.20,"passata pomodoro",1.10,"passata",1.10,"pelati",1.20,"polpa pomodoro",1.20,"concentrato pomodoro",1.50,"piselli scatola",1.10,"fagioli scatola",1.20,"fagioli borlotti",1.30,"ceci scatola",1.20,"lenticchie",1.40,"lenticchie secche",1.60,"mais scatola",1.30,"brodo cubetti",1.00,"brodo granulare",1.80,"salsa",1.80,"salsa bbq",2.50,"ketchup",2.20,"maionese",2.40,"maionese light",2.50,"senape",1.90,"salsa rosa",2.30,"tabasco",3.50,"soia salsa",2.80,"worcester",3.20,"capperi",2.20,"olive",2.60,"olive verdi",2.60,"olive nere",2.70,"sottaceti",2.40,"cetriolini",2.30,"funghi sottolio",3.20,"carciofini sottolio",3.50,"pomodori secchi",3.80].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["pomodori 1kg",2.10,"pomodori",2.10,"pomodorini",2.80,"pomodori datterini",3.20,"patate 1kg",1.29,"patate",1.29,"patate novelle",1.80,"cipolle 1kg",1.50,"cipolle",1.50,"cipolle rosse",1.70,"carote 1kg",1.40,"carote",1.40,"zucchine 1kg",1.90,"zucchine",1.90,"melanzane 1kg",1.80,"melanzane",1.80,"peperoni 1kg",2.20,"peperoni",2.20,"insalata",1.50,"lattuga",1.40,"lattuga iceberg",1.60,"rucola",1.60,"valeriana",1.70,"spinaci",2.00,"spinaci freschi",2.00,"broccoli",1.90,"cavolfiore",1.80,"cavolo",1.50,"cavolo verza",1.60,"finocchi",1.70,"sedano",1.30,"sedano rapa",1.60,"porri",1.90,"asparagi",4.50,"carciofi",2.50,"funghi",3.50,"funghi champignon",3.50,"funghi porcini",8.00,"aglio",0.90,"zenzero",3.80,"banane 1kg",1.69,"banane",1.69,"mele 1kg",2.20,"mele",2.20,"mele golden",2.20,"mele fuji",2.40,"pere 1kg",2.40,"pere",2.40,"arance 1kg",1.90,"arance",1.90,"limoni 1kg",2.30,"limoni",2.30,"mandarini 1kg",2.10,"mandarini",2.10,"clementine",2.20,"uva 1kg",2.80,"uva",2.80,"uva bianca",2.80,"fragole",3.50,"fragole 500g",3.50,"kiwi",2.60,"avocado",1.80,"mango",2.50,"ananas",2.80,"pesche",2.40,"albicocche",2.60,"ciliegie",4.90,"melone",2.20,"anguria",1.20,"prugne",2.50,"fichi",3.80,"noci",8.00,"nocciole",9.00,"mandorle",9.50,"pistacchi",12.00,"arachidi",4.50,"pinoli",14.00].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["pizza surgelata",3.20,"pizza margherita surgelata",3.20,"patatine surgelate",2.50,"verdure surgelate",2.20,"minestrone surgelato",2.80,"pesce surgelato",5.50,"gelato",4.50,"gelato vaschetta",4.50,"gelato cono",3.80,"gelato stecco",3.20,"ghiaccioli",2.50,"bastoncini pesce",3.40,"sofficini",3.10,"crocchette surgelate",2.90,"cotolette surgelate",3.80,"lasagne surgelate",4.50,"cannelloni surgelati",4.60,"ravioli surgelati",4.20,"tortellini surgelati",4.00,"gnocchi surgelati",2.50,"hamburger surgelati",4.20,"pollo surgelato",5.50,"frutti di bosco surgelati",3.80,"spinaci surgelati",1.90].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["acqua 6x1.5l",2.40,"acqua",2.40,"acqua naturale",2.40,"acqua frizzante",2.40,"coca cola 1.5l",1.90,"coca cola zero",1.90,"pepsi",1.80,"aranciata",1.70,"chinotto",1.70,"gassosa",1.60,"succo arancia",1.80,"succo ace",1.90,"succo pesca",1.80,"succo ananas",1.90,"nettare",1.90,"birra",1.20,"birra 33cl",1.20,"birra 6 bottiglie",5.50,"birra analcolica",1.40,"vino rosso",4.90,"vino bianco",4.90,"vino rosè",5.20,"prosecco",6.50,"spumante",7.50,"champagne",19.00,"lambrusco",4.50,"aperitivo",6.00,"spritz",6.00,"gin",12.00,"vodka",11.00,"whisky",15.00,"limoncello",9.50,"latte di soia",1.90,"latte di mandorla",2.40,"latte di avena",2.20,"latte di riso",2.20,"energy drink",1.80,"tè freddo",1.50,"tè freddo limone",1.50,"tè freddo pesca",1.50,"sciroppo",3.50,"granita",2.80,"acqua tonica",1.60,"soda",1.40].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["detersivo pavimenti",3.90,"detersivo pavimenti profumato",4.20,"detersivo piatti",2.90,"detersivo piatti limone",2.90,"detersivo lavatrice",6.50,"detersivo lavatrice liquido",6.50,"detersivo lavatrice polvere",5.90,"detersivo lavastoviglie",7.90,"detersivo lavastoviglie pastiglie",7.90,"ammorbidente",3.50,"ammorbidente concentrato",3.80,"candeggina",1.90,"candeggina delicata",2.20,"varechina",1.90,"sgrassatore",3.20,"sgrassatore universale",3.20,"vetri spray",2.80,"bagno spray",3.40,"bagno anticalcare",3.60,"mucillagine",2.20,"spugne",2.00,"spugne cucina",2.00,"panni microfibra",4.50,"panni cattura polvere",4.80,"scopa",8.00,"scopa elettrica",59.00,"mop",9.50,"mop pavimenti",9.50,"secchio",6.50,"guanti gomma",2.50,"guanti lattice",3.20,"sacchetti spazzatura",3.20,"sacchetti umido",2.80,"sacchetti gelo",2.20,"carta forno",1.80,"alluminio",2.60,"pellicola",2.10,"pellicola trasparente",2.10,"scottex",3.80,"scottex 4 rotoli",3.80,"scottex 8 rotoli",6.90,"carta igienica",4.90,"carta igienica 12 rotoli",4.90,"carta igienica 24 rotoli",8.90,"carta igienica 4 rotoli",2.20,"tovaglioli",1.90,"tovaglioli carta",1.90,"fazzoletti",1.60,"fazzoletti 10 pacchetti",2.80,"deodorante ambiente",3.80,"deodorante ambiente spray",3.80,"profumatore casa",5.50,"detersivo bucato liquido",6.50,"smacchiatore",4.20,"smacchiatore spray",4.20,"anticalcare",3.80,"disinfettante",3.90,"disinfettante mani",2.90,"alcool",2.50,"aceto bianco",1.60,"bicarbonato",1.20,"detersivo vetri",2.80,"detersivo forno",4.20,"detersivo frigo",3.50,"spray multiuso",3.20,"candeggina gel",2.40,"pastiglie wc",3.50,"scovolino",3.80,"spazzola wc",4.50].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["shampoo",4.50,"shampoo antiforfora",5.50,"shampoo delicato",4.60,"shampoo bimbi",4.20,"balsamo",4.20,"maschera capelli",5.80,"bagnoschiuma",3.90,"bagnoschiuma bimbi",3.80,"sapone mani",2.50,"sapone liquido",2.50,"sapone solido",1.90,"saponetta",1.90,"dentifricio",2.90,"dentifricio sbiancante",3.50,"dentifricio sensibile",3.40,"spazzolino",2.80,"spazzolino elettrico",24.00,"testine spazzolino",9.50,"collutorio",3.50,"filo interdentale",2.80,"deodorante",3.80,"deodorante spray",3.80,"deodorante roll-on",3.60,"deodorante stick",3.90,"crema viso",8.50,"crema viso giorno",8.50,"crema viso notte",9.50,"crema corpo",6.50,"crema mani",3.90,"crema piedi",4.50,"dopobarba",6.00,"dopobarba balsamo",6.20,"rasoio",7.50,"rasoio usa e getta",5.50,"lamette",8.90,"lamette ricambio",8.90,"schiuma da barba",3.20,"gel da barba",3.40,"struccante",4.50,"struccante occhi",4.80,"acqua micellare",5.20,"cotone",1.90,"dischetti cotone",1.90,"cotton fioc",1.80,"cerotti",2.50,"cerotti impermeabili",2.80,"vitamina c",7.90,"vitamina d",8.50,"integratore",12.00,"integratore ferro",9.50,"integratore magnesio",9.80,"docciaschiuma",3.90,"detergente intimo",4.20,"detergente intimo delicato",4.40,"bagno schiuma",3.90,"lozione corpo",6.50,"latte corpo",6.50,"profumo",19.00,"profumo donna",19.00,"profumo uomo",19.00,"smalto",4.90,"smalto trasparente",4.20,"solvente unghie",3.20,"lime unghie",2.50,"crema solare",9.50,"crema solare spf 50",11.00,"doposole",7.50,"burrocacao",2.80,"burro cacao",2.80,"gel mani",2.90,"salviettine struccanti",3.20,"salviettine intime",3.40,"assorbenti",3.90,"assorbenti notte",4.20,"assorbenti giorno",3.90,"proteggi slip",2.80,"tampax",4.50,"coppetta mestruale",14.00].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["pannolini",12.90,"pannolini taglia 3",12.90,"pannolini taglia 4",12.90,"pannolini taglia 5",13.50,"pannolini taglia 6",13.90,"salviettine bebe",3.20,"salviettine umidificate",3.20,"omogeneizzati",2.80,"omogeneizzati frutta",2.80,"omogeneizzati carne",2.90,"latte in polvere",14.50,"latte in polvere 1",14.50,"latte in polvere 2",14.50,"pastina bimbi",1.80,"pastina",1.80,"biscotti bimbi",2.60,"cibo cani",4.50,"cibo cani umido",4.50,"crocchette cani",12.00,"crocchette cani 3kg",12.00,"cibo gatti",3.90,"cibo gatti umido",3.90,"crocchette gatti",11.00,"crocchette gatti 2kg",11.00,"lettiera gatto",6.50,"lettiera agglomerante",7.50,"snack cani",3.50,"snack gatti",3.20,"biscotti cani",3.80,"shampoo cani",5.50,"shampoo gatti",5.50,"gioco cani",6.50,"gioco gatti",5.50].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
+["patatine",2.20,"patatine classiche",2.20,"patatine paprika",2.30,"popcorn",2.00,"popcorn microonde",2.20,"cioccolato",1.90,"cioccolato fondente",2.10,"cioccolato al latte",1.90,"cioccolatini",4.50,"cioccolatini assortiti",5.50,"caramelle",2.00,"caramelle gommose",2.20,"gomme",1.50,"gomme senza zucchero",1.60,"snack dolci",2.40,"snack salati",2.20,"torta al cioccolato",5.50,"gelato",4.50,"wafer",2.10,"wafer cioccolato",2.30,"taralli",2.00,"taralli pugliesi",2.00,"grissini",1.90,"grissini torinesi",1.90,"cracker",1.80,"cracker integrali",1.90,"noccioline",3.50,"mix frutta secca",5.50,"barrette cereali",2.80,"barrette proteiche",3.80,"liquorice",2.00,"marshmallow",2.40,"nutella go",2.20,"kinder",2.80,"ovetto",1.80,"uovo di pasqua",9.90].forEach((x,i,a)=>{if(i%2===0)add(x,a[i+1])});
 
-function calcola(){
-  let z=document.getElementById('zona').value.split(','); 
-  // usa la zona scelta
-  miaPos={lat:parseFloat(z[0]),lng:parseFloat(z[1])};
-  if(lista.length===0) return alert('Aggiungi un prodotto');
-  let consumo=parseFloat(document.getElementById('auto').value);
-  let prezzoB=parseFloat(document.getElementById('prezzoBenz').value);
-  let costoKm = consumo>=900 ? 0 : (1/consumo*prezzoB); // euro per km
-
-  // --- 1. MIGLIORE SINGOLO ---
-  let singoli = NEGOZI.map(n=>{
-    let tot=0; lista.forEach(p=>{ tot += (DB[p] && DB[p][n.nome] ? DB[p][n.nome] : 2.5); });
-    let d = distKm(miaPos,n);
-    let benz = d*2*costoKm;
-    return {...n, spesa:tot, dist:d, totale:tot+benz, benz};
-  });
-  singoli.sort((a,b)=>a.totale-b.totale);
-  let bestSingle = singoli[0];
-
-  // --- 2. MIGLIORE MULTI-TAPPA: ogni prodotto dove costa meno ---
-  let piano = {}; // negozio -> [prodotti]
-  let spesaMulti = 0; let dettaglioMulti = [];
-  lista.forEach(p=>{
-    let bestN=null, bestP=999;
-    NEGOZI.forEach(n=>{ let pr = DB[p] && DB[p][n.nome] ? DB[p][n.nome] : 999; if(pr<bestP){bestP=pr; bestN=n.nome;} });
-    if(!piano[bestN]) piano[bestN]=[];
-    piano[bestN].push(`${p} €${bestP.toFixed(2)}`);
-    spesaMulti+=bestP;
-    dettaglioMulti.push(`${p} → ${bestN} €${bestP.toFixed(2)}`);
-  });
-  let negoziMulti = Object.keys(piano).map(nome=> NEGOZI.find(n=>n.nome===nome));
-  // Se sono più di 3 negozi, teniamo solo i 2 che fanno risparmiare di più? Per semplicità teniamo max 3 più vicini tra loro
-  // Ordine percorso: greedy dal più vicino a casa
-  let ordine=[]; let pos={...miaPos}; let rest=[...negoziMulti];
-  while(rest.length){ rest.sort((a,b)=>distKm(pos,a)-distKm(pos,b)); let nxt=rest.shift(); ordine.push(nxt); pos=nxt; }
-  let kmMulti=0; let cur={...miaPos};
-  ordine.forEach(n=>{ kmMulti+=distKm(cur,n); cur=n; });
-  kmMulti+=distKm(cur,miaPos); // ritorno a casa
-  let benzMulti = kmMulti*costoKm;
-  let totaleMulti = spesaMulti + benzMulti;
-
-  // --- 3. VERDETTO ---
-  let convieneMulti = totaleMulti < bestSingle.totale;
-  let risparmio = Math.abs(bestSingle.totale - totaleMulti);
-
-  // --- MAPPA ---
-  if(!map){ map=L.map('map').setView([miaPos.lat,miaPos.lng],13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map); }
-  map.setView([miaPos.lat,miaPos.lng],12);
-  markers.forEach(m=>map.removeLayer(m)); markers=[];
-  let casa = L.marker([miaPos.lat,miaPos.lng]).addTo(map).bindPopup('🏠 TU SEI QUI'); markers.push(casa);
-  // Se conviene multi, disegna percorso multi in blu, altrimenti percorso singolo in verde
-  if(convieneMulti){
-    let percorso=[[miaPos.lat,miaPos.lng],...ordine.map(o=>[o.lat,o.lng]),[miaPos.lat,miaPos.lng]];
-    let linea=L.polyline(percorso,{color:'blue',weight:4}).addTo(map); markers.push(linea);
-    ordine.forEach((r,i)=>{ let m=L.marker([r.lat,r.lng]).addTo(map).bindPopup(`<b>${i+1}° TAPPA: ${r.nome}</b><br>${piano[r.nome].join('<br>')}`); markers.push(m); });
-  } else {
-    let m=L.marker([bestSingle.lat,bestSingle.lng]).addTo(map).bindPopup(`<b>${bestSingle.nome}</b><br>Totale €${bestSingle.totale.toFixed(2)}`); markers.push(m);
-    let linea=L.polyline([[miaPos.lat,miaPos.lng],[bestSingle.lat,bestSingle.lng],[miaPos.lat,miaPos.lng]],{color:'green',weight:4}).addTo(map); markers.push(linea);
-  }
-
-  let html = '';
-  if(convieneMulti){
-    html += `<div class="verdict multi">🏆 CONVIENE FARE ${ordine.length} TAPPE<br>Risparmi €${risparmio.toFixed(2)} anche con la benzina!</div>`;
-  } else {
-    html += `<div class="verdict single">🏆 CONVIENE ANDARE IN 1 SOLO SUPERMERCATO<br>Risparmi €${risparmio.toFixed(2)} rispetto a fare più tappe</div>`;
-  }
-  html += `
-  <div class="store best"><b>🛒 OPZIONE 1 TAPPA: ${bestSingle.nome}</b><br>
-  Spesa: €${bestSingle.spesa.toFixed(2)} + Benzina: €${bestSingle.benz.toFixed(2)} (${(bestSingle.dist*2).toFixed(1)} km A/R)<br>
-  <b>TOTALE: €${bestSingle.totale.toFixed(2)}</b><br>
-  <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(bestSingle.nome+' Milano')}" target="_blank">🧭 Naviga →</a></div>
-
-  <div class="store multi"><b>🔀 OPZIONE PIÙ TAPPE: ${ordine.map(o=>o.nome).join(' → ')}</b><br>
-  Spesa (ogni prodotto dove costa meno): €${spesaMulti.toFixed(2)} + Benzina: €${benzMulti.toFixed(2)} (${kmMulti.toFixed(1)} km totali)<br>
-  <b>TOTALE: €${totaleMulti.toFixed(2)}</b><br>
-  <small>${dettaglioMulti.join('<br>')}</small><br>
-  <a href="https://www.google.com/maps/dir/?api=1&origin=${miaPos.lat},${miaPos.lng}&destination=${encodeURIComponent(ordine[ordine.length-1].nome+' Milano')}&waypoints=${ordine.slice(0,-1).map(o=>encodeURIComponent(o.nome+' Milano')).join('|')}" target="_blank">🧭 Naviga giro completo →</a></div>
-
-  <h3>📊 Tutti in 1 tappa</h3>${singoli.map(r=>`<div>${r.nome} - Spesa €${r.spesa.toFixed(2)} + Benzina €${r.benz.toFixed(2)} = <b>€${r.totale.toFixed(2)}</b></div>`).join('')}`;
-  document.getElementById('risultato').innerHTML = html;
-}
-render();
+function creaDB(){let db={};Object.keys(PREZZI).forEach(p=>{db[p]={};NEGOZI.forEach((n,i)=>{let base=PREZZI[p];let v=[0,0,0.15,0.08,0.05,-0.15,-0.20,-0.10,-0.08,0][i]||0;if(base>10)v=v*5;if(base>5)v=v*2;db[p][n.nome]=Math.max(0.5,+(base+v).toFixed(2));});});return db;}
+let DB=JSON.parse(localStorage.getItem('spesa_prezzi_milano_v4')||'null')||creaDB();
+document.getElementById('prezziJson').value=JSON.stringify(DB,null,2);
+let lista=JSON.parse(localStorage.getItem('spesa_lista_milano')||'["latte 1l","scottex","carta igienica"]');
+let miaPos={lat:45.4642,lng:9.19};let map,markers=[];
+function save(){localStorage.setItem('spesa_lista_milano',JSON.stringify(lista));}
+function render(){document.getElementById('lista').innerHTML=lista.map((p,i)=>`<span class="chip">${p}<b onclick="lista.splice(${i},1);save();render()">x</b></span>`).join('')||'<small>Lista vuota</small>';document.getElementById('conta').textContent=lista.length;}
+function renderCat(){let f=(document.getElementById('cerca').value||'').toLowerCase();let h='';let totale=0;Object.keys(CATEGORIE).forEach(cat=>{let items=CATEGORIE[cat].filter(p=>!f||p.includes(f));if(!items.length)return;totale+=items.length;h+=`<div class="cat"><b>${cat} (${items.length})</b>${items.map(p=>`<button class="sec" onclick="rapido('${p}')">${p}</button>`).join('')}</div>`;});document.getElementById('categorie').innerHTML=h||'<small>Nessun prodotto trovato, aggiungilo a mano sopra</small>';}
+function aggiungi(){let v=document.getElementById('prodotto').value.trim().toLowerCase();if(!v)return;if(!lista.includes(v))lista.push(v);document.getElementById('prodotto').value='';save();render();}
+function rapido(p){if(!lista.includes(p))lista.push(p);save();render();}
+function pulisci(){lista=[];save();render();}
+function salvaPrezzi(){try{DB=JSON.parse(document.getElementById('prezziJson').value);localStorage.setItem('spesa_prezzi_milano_v4',JSON.stringify(DB));alert('Prezzi salvati!');}catch(e){alert('JSON non valido');}}
+function aggiungiProdottoNuovo(){let p=document.getElementById('nuovoProd').value.trim().toLowerCase();let pr=parseFloat(document.getElementById('nuovoPrezzo').value);if(!p||!pr)return alert('Scrivi prodotto e prezzo');DB[p]={};NEGOZI.forEach(n=>{DB[p][n.nome]=pr;});localStorage.setItem('spesa_prezzi_milano_v4',JSON.stringify(DB));document.getElementById('prezziJson').value=JSON.stringify(DB,null,2);alert(p+' aggiunto €'+pr);}
+function gps(){if(!navigator.geolocation)return alert('GPS non disponibile');navigator.geolocation.getCurrentPosition(p=>{miaPos={lat:p.coords.latitude,lng:p.coords.longitude};alert('Posizione presa!');},()=>alert('Consenti GPS'));}
+function distKm(a,b){const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180;const h=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+function prezzoDi(p,negozio){if(DB[p]&&DB[p][negozio])return{val:DB[p][negozio],stimato:false};let k=Object.keys(DB).find(k=>k.includes(p)||p.includes(k));if(k&&DB[k][negozio])return{val:DB[k][negozio],stimato:true};return{val:3.50,stimato:true};}
+function calcola(){try{let z=document.getElementById('zona').value.split(',');miaPos={lat:parseFloat(z[0]),lng:parseFloat(z[1])};if(lista.length===0)return alert('Aggiungi un prodotto');let consumo=parseFloat(document.getElementById('auto').value);let prezzoB=parseFloat(document.getElementById('prezzoBenz').value)||1.78;let costoKm=consumo>=900?0:(1/consumo*prezzoB);let avvisi=[];let singoli=NEGOZI.map(n=>{let tot=0;lista.forEach(p=>{let r=prezzoDi(p,n.nome);tot+=r.val;if(r.stimato&&!avvisi.includes(p))avvisi.push(p);});let d=distKm(miaPos,n);let benz=d*2*costoKm;return{...n,spesa:tot,dist:d,totale:tot+benz,benz};});singoli.sort((a,b)=>a.totale-b.totale);let bestSingle=singoli[0];let piano={};let spesaMulti=0;let dettaglioMulti=[];lista.forEach(p=>{let bestN=null,bestP=999;NEGOZI.forEach(n=>{let pr=prezzoDi(p,n.nome).val;if(pr<bestP){bestP=pr;bestN=n.nome;}});if(!piano[bestN])piano[bestN]=[];piano[bestN].push(`${p} €${bestP.toFixed(2)}`);spesaMulti+=bestP;dettaglioMulti.push(`${p} → ${bestN} €${bestP.toFixed(2)}`);});let negoziMulti=Object.keys(piano).map(nome=>NEGOZI.find(n=>n.nome===nome));let ordine=[];let pos={...miaPos};let rest=[...negoziMulti];while(rest.length){rest.sort((a,b)=>distKm(pos,a)-distKm(pos,b));let nxt=rest.shift();ordine.push(nxt);pos=nxt;}let kmMulti=0;let cur={...miaPos};ordine.forEach(n=>{kmMulti+=distKm(cur,n);cur=n;});kmMulti+=distKm(cur,miaPos);let benzMulti=kmMulti*costoKm;let totaleMulti=spesaMulti+benzMulti;let convieneMulti=totaleMulti<bestSingle.totale;let risparmio=Math.abs(bestSingle.totale-totaleMulti);if(!map){map=L.map('map').setView([miaPos.lat,miaPos.lng],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);}map.setView([miaPos.lat,miaPos.lng],12);markers.forEach(m=>map.removeLayer(m));markers=[];markers.push(L.marker([miaPos.lat,miaPos.lng]).addTo(map).bindPopup('🏠 TU SEI QUI'));if(convieneMulti){let percorso=[[miaPos.lat,miaPos.lng],...ordine.map(o=>[o.lat,o.lng]),[miaPos.lat,miaPos.lng]];markers.push(L.polyline(percorso,{color:'blue',weight:4}).addTo(map));ordine.forEach((r,i)=>{markers.push(L.marker([r.lat,r.lng]).addTo(map).bindPopup(`<b>${i+1}° TAPPA: ${r.nome}</b><br>${piano[r.nome].join('<br>')}`));});}else{markers.push(L.marker([bestSingle.lat,bestSingle.lng]).addTo(map).bindPopup(`<b>${bestSingle.nome}</b>`));markers.push(L.polyline([[miaPos.lat,miaPos.lng],[bestSingle.lat,bestSingle.lng],[miaPos.lat,miaPos.lng]],{color:'green',weight:4}).addTo(map));}let html='';if(avvisi.length)html+=`<div class="warn">⚠️ Prezzo stimato per: <b>${avvisi.join(', ')}</b></div>`;html+=convieneMulti?`<div class="verdict multi">🏆 CONVIENE FARE ${ordine.length} TAPPE<br>Risparmi €${risparmio.toFixed(2)} anche con la benzina!</div>`:`<div class="verdict single">🏆 CONVIENE 1 SOLO SUPERMERCATO<br>Risparmi €${risparmio.toFixed(2)} rispetto a più tappe</div>`;html+=`<div class="store best"><b>🛒 1 TAPPA: ${bestSingle.nome}</b><br>Spesa €${bestSingle.spesa.toFixed(2)} + Benzina €${bestSingle.benz.toFixed(2)}<br><b>TOTALE €${bestSingle.totale.toFixed(2)}</b></div><div class="store multi"><b>🔀 PIÙ TAPPE: ${ordine.map(o=>o.nome).join(' → ')}</b><br>Spesa €${spesaMulti.toFixed(2)} + Benzina €${benzMulti.toFixed(2)} (${kmMulti.toFixed(1)} km)<br><b>TOTALE €${totaleMulti.toFixed(2)}</b><br><small>${dettaglioMulti.join('<br>')}</small></div>`;document.getElementById('risultato').innerHTML=html;}catch(e){alert('Errore: '+e.message);}}
+render();renderCat();
 </script>
 </body>
 </html>
